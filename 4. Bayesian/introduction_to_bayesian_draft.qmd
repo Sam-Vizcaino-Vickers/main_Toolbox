@@ -1,0 +1,124 @@
+---
+title: "Introduction to Bayesian Statistics Early Draft"
+author: "Sam J. Vizcaino-Vickers"
+date: "28/10/2024"
+format: html
+editor: visual
+---
+
+# 1. Introduction to Bayesian Models in R
+
+This document provides an overview of Bayesian modeling in R, covering linear regression, logistic regression, Poisson regression, multilevel models, and custom settings in the `brms` package.
+
+```{r setup, include=FALSE}
+# Load necessary packages
+library(devtools)
+library(rstan)
+library(brms)
+library(tidyverse)
+library(lme4)
+```
+
+## 1.1 Bayesian Linear Regression
+
+The initial code simulates some data and fits a Bayesian linear regression model using Markov Chain Monte Carlo (MCMC) methods.
+
+```{r}
+# Simulated data
+data_df1 <- data.frame(
+  y = c(2.3, 1.9, 3.7, 2.5, 4.1, 5.2),
+  x_1 = c(1.1, 0.8, 1.4, 1.0, 2.0, 1.5),
+  x_2 = c(0.7, 1.2, 0.5, 1.1, 1.3, 0.9)
+)
+
+# Simple model
+M1 <- brm(y ~ x_1 + x_2, data = data_df1)
+summary(M1)
+plot(M1)
+```
+
+**Explanation**:\
+The `brms` function uses Bayesian MCMC to estimate the posterior distributions for each model parameter, assuming a Gaussian family for the continuous response variable `y`. Key statistics such as the Rhat are provided to assess chain convergence.
+
+**Inference**:\
+The model's output includes Rhat values, which help confirm convergence. The closer to 1, the more reliable the MCMC sampling.
+
+## 1.2 Posterior Distribution Visualization
+
+We visualise the posterior distributions and set up the model to show the parameter distribution ranges.
+
+```{r}
+# Plot posterior distributions
+mcmc_plot(M1)
+mcmc_plot(M1, type = 'hist', binwidth = 0.05)
+```
+
+**Explanation**:\
+These visualizations provide insights into the parameter distributions, helping to confirm the reliability of our estimated values.
+
+## 1.3 Modifying Priors and MCMC Settings
+
+Custom settings allow adjusting iterations, chains, warmup steps, and priors.
+
+```{r}
+M2 <- brm(y ~ x_1 + x_2, data = data_df1,
+          iter = 2500,
+          warmup = 500,
+          chains = 4,
+          prior = set_prior('normal(0, 100)'))
+summary(M2)
+```
+
+**Inference**:\
+By extending iterations and customizing priors, we can refine the model’s robustness. A prior distribution of `normal(0, 100)` centers the values around zero, which can be useful for highly variable data
+
+## 1.4 Model Comparison
+
+We can now compare models with the `loo` method and `bayes_factor`.
+
+```{r}
+bayes_R2(M1)
+bayes_R2(M2)
+```
+
+## 1.5 Logistic and Poisson Regression Models 
+
+Bayesian methods are also applicable to logistic and Poisson regressions, allowing modeling of binary and count data, respectively.
+
+```{r}
+# Logistic regression
+data_df2 <- data.frame(
+  y = rbinom(100, 1, 0.5),
+  x_1 = rnorm(100, mean = 170, sd = 10),
+  x_2 = rnorm(100, mean = 25, sd = 5)
+)
+M4 <- brm(y ~ x_1 + x_2, data = data_df2, family = bernoulli())
+
+# Poisson regression
+data_df3 <- data.frame(
+  y = rpois(100, exp(0.5 * x_1 + 0.3 * x_2)),
+  x_1 = rnorm(100, mean = 5, sd = 2),
+  x_2 = rnorm(100, mean = 10, sd = 3)
+)
+M5 <- brm(y ~ x_1 + x_2, data = data_df3, family = poisson())
+```
+
+## 1.6 Multilevel Models
+
+With Bayesian multilevel models, we can add grouping structures to model individual differences in intercepts and slopes.
+
+```{r}
+# Random intercept and slope model
+n_subjects <- 10
+n_obs_per_subject <- 10
+x_2 <- factor(rep(1:n_subjects, each = n_obs_per_subject))
+x_1 <- rep(0:9, times = n_subjects)
+y <- 15 + 2 * x_1 + rnorm(n_subjects * n_obs_per_subject, sd = 3)
+
+data_df4 <- data.frame(y = y, x_1 = x_1, x_2 = x_2)
+M10 <- brm(y ~ x_1 + (x_1 | x_2), data = data_df4)
+```
+
+### Conclusion
+
+This document illustrated Bayesian modeling using `brms`, covering basic regression, advanced customizations, and multilevel models. Bayesian methods allow incorporating prior knowledge into models, making them adaptable for real-world, complex data. However, the issue at the moment is that this is a good start, but we need to manage the models more carefully and to also look at the equations we implement, the independent / dependent relationships, and complexity of the variables. Therefore, my next chapter will focus upon bayesian methods using `rstanarm` , `cmdstan` and `stan`.
