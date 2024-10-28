@@ -1,0 +1,161 @@
+---
+title: "Introduction to Bayesian Statistics Early Draft"
+author: "Sam J. Vizcaino-Vickers"
+date: "28/10/2024"
+format: html
+editor: visual
+---
+
+
+# Introduction
+
+In this document, we’ll explore various Frequentist statistical models, including linear regression, logistic regression, Poisson regression, negative binomial regression, and multilevel models. We’ll go over the code, explain the processes, and interpret the results for each model.
+
+# Loading Libraries
+
+```{r}
+library(tidyverse)
+library(lme4) # for multilevel models
+library(MASS) # for negative binomial regression
+```
+
+
+
+# 1. Linear Regression 
+
+Linear regression models the relationship between a continuous dependent variable $y$ and one or more continuous or categorical predictors. Here, we model y using predictors `x_1` and `x_2`.
+
+```{r}
+# Simulating data
+data_df1 <- data.frame(
+  y = c(2.3, 1.9, 3.7, 2.5, 4.1, 5.2),
+  x_1 = c(1.1, 0.8, 1.4, 1.0, 2.0, 1.5),
+  x_2 = c(0.7, 1.2, 0.5, 1.1, 1.3, 0.9)
+)
+
+# Running the linear model
+M1 <- lm(y ~ x_1 + x_2, data = data_df1)
+summary(M1)
+
+```
+
+
+## Inference 
+
+The coefficients represent the estimated change in `y` for each unit change in the predictors `x_1` and `x_2`. The p-values indicate whether these predictors have a statistically significant effect on `y`.
+
+## Conclusion
+Linear regression shows how continuous predictors influence the dependent variable, providing insight into which variables might be significant predictors.
+
+
+
+# 2. Logistic regression 
+
+Description
+Logistic regression models the probability of a binary outcome y (e.g., success or failure) given continuous predictors. In this case, we simulate a binary outcome with predictors x_1 and x_2.
+
+```{r}
+# Simulating data for a binary outcome
+data_df2 <- data.frame(
+  y = rbinom(100, 1, 0.5),
+  x_1 = rnorm(100, mean = 170, sd = 10),
+  x_2 = rnorm(100, mean = 25, sd = 5)
+)
+
+# Logistic regression model
+M2 <- glm(y ~ x_1 + x_2, data = data_df2, family = binomial())
+summary(M2)
+```
+
+
+Inference
+The model’s coefficients represent the log-odds of y being 1. The exponentiated coefficients (exp(coef)) provide the odds ratio, offering insight into the strength of predictors on the probability of y.
+
+Conclusion
+Logistic regression effectively models binary outcomes and provides information on how each predictor affects the probability of the outcome.
+
+
+# 3. Frequentist Poisson Regression
+Description
+Poisson regression is appropriate for count data, where the response variable represents the count of events over a fixed period. Here, y represents count data, with predictors x_1 and x_2.
+
+```{r}
+# Simulating Poisson-distributed count data
+x_1 <- rnorm(100, mean = 5, sd = 2)
+x_2 <- rnorm(100, mean = 10, sd = 3)
+lambda <- exp(0.5 * x_1 + 0.3 * x_2)
+y <- rpois(100, lambda)
+
+data_df3 <- data.frame(y = y, x_1 = x_1, x_2 = x_2)
+
+# Running Poisson regression
+M3 <- glm(y ~ x_1 + x_2, data = data_df3, family = poisson())
+summary(M3)
+```
+
+Inference
+In Poisson regression, coefficients show the effect of each predictor on the log count of y. Exponentiating the coefficients provides rate ratios, helping to understand the effect size.
+
+Conclusion
+Poisson regression is useful for modeling count data, particularly when the data distribution closely follows a Poisson distribution.
+
+
+# 4. Negative Binomial Regression
+Description
+Negative binomial regression is used when count data are overdispersed, meaning the variance exceeds the mean. This model uses y with predictors x_1 and x_2.
+
+```{r}
+# Negative binomial regression
+M4 <- glm.nb(y ~ x_1 + x_2, data = data_df3)
+summary(M4)
+```
+
+
+Inference
+The negative binomial regression adjusts for overdispersion, giving a more accurate fit than Poisson regression in cases of overdispersed data. The coefficients are interpreted similarly to Poisson regression.
+
+Conclusion
+Negative binomial regression is an extension of Poisson regression and offers a solution for overdispersed count data, providing reliable parameter estimates.
+
+
+5. Frequentist Multilevel Models
+
+Description
+Multilevel models allow for hierarchical data, where observations are nested within groups (e.g., subjects). We simulate data with x_1 as a continuous predictor and x_2 representing grouping by subjects.
+
+```{r}
+# Simulating data for multilevel model
+n_subjects <- 10
+n_obs_per_subject <- 10
+x_2 <- factor(rep(1:n_subjects, each = n_obs_per_subject))
+x_1 <- rep(0:9, times = n_subjects)
+random_intercepts <- rnorm(n_subjects, mean = 0, sd = 5)
+random_slopes <- rnorm(n_subjects, mean = 0.5, sd = 0.2)
+y <- 15 + 2 * x_1 + random_intercepts[x_2] + random_slopes[x_2] * x_1 + rnorm(n_subjects * n_obs_per_subject, sd = 3)
+data_df4 <- data.frame(y = y, x_1 = x_1, x_2 = x_2)
+
+# Random intercepts and slopes model
+M5 <- lmer(y ~ x_1 + (x_1 | x_2), data = data_df4)
+summary(M5)
+
+```
+
+Inference
+Multilevel models allow us to partition variance at different levels. The coefficients show fixed effects of predictors on y, while random effects represent subject-specific variations.
+
+Conclusion
+Multilevel models are powerful for analyzing hierarchical data, providing insight into group-level and individual-level variations.
+
+
+Model Comparison
+Description
+AIC (Akaike Information Criterion) allows model comparison, providing a measure of model fit adjusted for the number of parameters.
+
+```{r}
+AIC(M1, M2, M3, M4, M5)
+```
+
+Conclusion
+Lower AIC values indicate a better fit to the data, allowing for selection of the most appropriate model among alternatives.
+
+
