@@ -81,7 +81,7 @@ bayes_R2(M1)
 bayes_R2(M2)
 ```
 
-## 1.5 Logistic and Poisson Regression Models 
+## 1.5 Logistic and Poisson Regression Models
 
 Bayesian methods are also applicable to logistic and Poisson regressions, allowing modeling of binary and count data, respectively.
 
