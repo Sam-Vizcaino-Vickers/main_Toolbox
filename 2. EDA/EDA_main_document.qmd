@@ -1,0 +1,214 @@
+---
+title: "EDA early draft"
+author: "Sam J. Vizcaino-Vickers"
+date: "29/10/2024"
+format: html
+editor: visual
+---
+
+# Data Processing in R
+
+This document provides an overview of data exploration, data wrangling, extraction, and other essential data processing techniques using R.
+
+## 1. Data Exploration
+
+Data exploration involves initial insights into the data, such as understanding variable types, missing values, and distributions.
+
+```{r}
+# Loading Libraries
+library(tidyverse)
+library(readr)
+
+# Loading a sample dataset
+data <- read_csv("data/sample_data.csv")
+
+# Overview of the data
+head(data)         # View first few rows
+str(data)          # Structure of the data
+summary(data)      # Summary statistics for numerical variables
+glimpse(data)      # Quick overview with dplyr
+```
+
+In this step, we see the initial structure, identify variable types, and understand the distributions of numerical variables.
+
+
+
+## 2. Data Wrangling
+
+Data wrangling refers to transforming and cleaning the data. We handle missing values, filter rows, and select columns.
+
+
+### 2.1 Handling Missing Values
+
+```{r}
+# Checking for missing values
+colSums(is.na(data))
+
+# Imputing missing values (mean for numerical, mode for categorical)
+data <- data %>%
+  mutate_if(is.numeric, ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)) %>%
+  mutate_if(is.character, ~ ifelse(is.na(.), "Unknown", .))
+
+```
+
+2.2 Filtering and Selecting Columns
+
+```{r}
+# Selecting specific columns
+data_selected <- data %>%
+  select(column1, column2, column3)
+
+# Filtering rows based on conditions
+data_filtered <- data %>%
+  filter(column1 > 5, column2 == "CategoryA")
+
+```
+
+Here, we handle missing values using imputation and filter rows or select specific columns to focus on relevant data.
+
+## 3. Data Transformation
+Data transformation includes scaling, normalization, and creating new variables for analysis.
+
+```{r}
+# Scaling a continuous variable
+data <- data %>%
+  mutate(scaled_column1 = scale(column1))
+
+# Normalizing a variable
+data <- data %>%
+  mutate(normalized_column1 = (column1 - min(column1)) / (max(column1) - min(column1)))
+
+# Creating a new categorical variable based on conditions
+data <- data %>%
+  mutate(new_category = case_when(
+    column1 < 5 ~ "Low",
+    column1 >= 5 & column1 < 10 ~ "Medium",
+    TRUE ~ "High"
+  ))
+```
+
+
+Scaling and normalizing improve comparability between features, and creating categories makes continuous data interpretable for categories.
+
+## 4. Data Extraction
+
+Data extraction involves loading data from various sources like files, APIs, or databases.
+
+## 4.1 Extracting Data from Files
+
+```{r}
+data_csv <- read_csv("data/sample_data.csv")
+data_excel <- readxl::read_excel("data/sample_data.xlsx")
+data_json <- jsonlite::fromJSON("data/sample_data.json")
+```
+
+## 4.2 Extracting Data from Web APIs
+
+```{r}
+library(httr)
+response <- GET("https://api.example.com/data")
+data_api <- content(response, as = "parsed")
+
+```
+
+## 4.3 Extracting Data from Databases
+```{r}
+library(DBI)
+con <- dbConnect(RSQLite::SQLite(), "data/sample_database.db")
+data_sql <- dbGetQuery(con, "SELECT * FROM table_name WHERE column1 > 5")
+dbDisconnect(con)
+
+```
+
+This section covers reading data from common file types, APIs, and SQL databases, each crucial for data integration.
+
+
+## 5. Data Aggregation and Summarization
+
+Aggregation helps condense data by groups to uncover summary metrics.
+
+```{r}
+data_summary <- data %>%
+  group_by(category_column) %>%
+  summarize(
+    mean_value = mean(numerical_column, na.rm = TRUE),
+    max_value = max(numerical_column, na.rm = TRUE),
+    count = n()
+  )
+```
+
+Here, we group data by categories and calculate summary statistics like mean and max values.
+
+## 6. Data Reshaping
+
+Data reshaping changes data formats for easier analysis, such as pivoting.
+
+
+## 6.1 Pivoting Data
+
+```{r}
+# Pivoting from long to wide format
+data_wide <- data %>%
+  pivot_wider(names_from = category_column, values_from = value_column)
+
+# Pivoting from wide to long format
+data_long <- data_wide %>%
+  pivot_longer(cols = starts_with("value"), names_to = "category", values_to = "value")
+```
+
+Reshaping facilitates transformations between long and wide formats, ideal for pivot tables and matrix analysis.
+
+#7. Working with Dates and Times
+
+Handling dates is essential in time-based data analysis.
+
+```{r}
+library(lubridate)
+
+# Parsing dates and extracting components
+data <- data %>%
+  mutate(
+    date = as.Date(date_column, format = "%Y-%m-%d"),
+    year = year(date),
+    month = month(date),
+    day = day(date)
+  )
+
+```
+
+
+This code parses dates and extracts key components (year, month, day), allowing for flexible time-based grouping.
+
+# 8. Data Visualization
+
+Visualizations reveal patterns and outliers in data. We use ggplot2 for creating plots.
+
+```{r}
+library(ggplot2)
+
+# Histogram
+ggplot(data, aes(x = numerical_column)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Distribution of Numerical Variable")
+
+# Boxplot
+ggplot(data, aes(x = category_column, y = numerical_column)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Numerical Variable by Category")
+
+# Line plot for time series data
+ggplot(data, aes(x = date, y = numerical_column)) +
+  geom_line() +
+  labs(title = "Time Series Plot of Numerical Variable")
+
+```
+
+Histograms, boxplots, and line plots are essential in understanding data distributions, comparisons, and trends over time.
+
+# Conclusion
+
+In this guide, we covered core data processing steps: exploration, wrangling, transformation, extraction, aggregation, reshaping, and visualization. These steps prepare data for analysis, enabling us to extract meaningful insights efficiently.
+
+
+
+
