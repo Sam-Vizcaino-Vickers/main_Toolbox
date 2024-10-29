@@ -5,4 +5,46 @@ format: html
 editor: visual
 ---
 
-# Prerequisites 
+# Prerequisites
+
+Using both python, r, and julia will be essential. I will change between the three when I deem best or what is currently the best to use.
+
+## Data Science 
+
+## Reproducibility 
+
+## Mathematical Operations 
+
+## Proofs 
+
+## Pre-calculus 
+
+## Pre-algebra 
+
+## Algebra 
+
+## Calculus 
+
+## Linear Algebra 
+
+## Statistics 
+
+## Probability Theory 
+
+# + More to come 
+
+-   Linux
+
+    -   Arch Linux
+
+-   Docker
+
+-   IDE
+
+    -   Visual Studio Code
+
+    -   Neovim
+
+    -   etc.
+
+-   
